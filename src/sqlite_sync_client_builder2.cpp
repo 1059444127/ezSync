@@ -33,7 +33,7 @@ namespace ezsync{
         });
 
         TransferRest* rest = new TransferRest(temp["host"],temp["path"],headers,"",temp["host"]+"/batch",temp["encrypt"] != "0");
-            
+        transfer.reset(rest);
         std::shared_ptr<CloudStorage> re(new CloudStorage(transfer,temp["remote_storage"]));
         std::shared_ptr<CloudVersionHistory2> rvs(new CloudVersionHistory2(transfer,
             temp["local_history"]+".ezsync",temp["remote_storage"]));
