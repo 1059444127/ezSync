@@ -9,9 +9,7 @@
 #include "ezsync/log.h"
 #include "ezsync/verify_true.h"
 #include "ezsync/verify_transfer_result.h"
-#include "transfer/TransferPcs.h"
 #include "transfer/TransferRest.h"
-#include "transfer_with_logon.h"
 
 
 namespace ezsync{
