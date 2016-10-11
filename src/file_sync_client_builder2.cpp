@@ -57,76 +57,12 @@ namespace ezsync{
 
         if(temp["remote_type"] == "REST"){//文件保存REST服务
             TransferRest* rest = new TransferRest(temp["host"],temp["path"],headers,"",temp["host"]+"/batch",temp["encrypt"] != "0");
-            if(temp["note_token"].empty()){
-                TransferWithLogon::OnLogonOK om_logon_ok = [cookie,rest](const std::string& access_token,const std::string& note_token)mutable{
-                    rest->set_cookie(cookie+
-                        "NOTETOKEN=" + note_token+"; ");
-                };
-                transfer.reset(new TransferWithLogon(std::shared_ptr<TransferInterface>(rest),
-                    temp["host"],
-                    cookie,
-                    temp["local_history"]+"/.ezsync/bduss/",
-                    headers,
-                    "",
-                    om_logon_ok,
-                    temp["encrypt"] != "0")); // 使用SSL
-            }else{
-                rest->set_cookie(cookie+
-                        "NOTETOKEN=" + temp["note_token"]+"; ");
-                transfer.reset(rest);
-            }
-
-
+            transfer.reset(rest);
+            
             re.reset(new CloudStorage(transfer,temp["remote_storage"]));
             rvs.reset(new CloudVersionHistory2(transfer,temp["local_history"],temp["remote_storage"]));
             control->transfers.push_back(transfer);
 
-        }else if(temp["remote_type"] == "pcs"){//文件保存到pcs
-
-            //版本信息不存pcs，因为pcs处理小文件太慢，且不能批量上传下载
-            //用于数据保存
-            TransferPcs* pcs = new TransferPcs(temp["host"],temp["path"],"",headers,"",true);
-            if(temp["access_token"].empty()){
-                TransferWithLogon::OnLogonOK om_logon_ok = [temp,pcs](const std::string& access_token,const std::string& note_token)mutable{
-                    pcs->set_access_token(access_token);
-                };
-                transfer.reset(new TransferWithLogon(std::shared_ptr<TransferInterface>(pcs),
-                    temp["logon_host"],
-                    cookie,
-                    temp["local_history"]+"/.ezsync/bduss/",
-                    headers,
-                    "",
-                    om_logon_ok,
-                    temp["encrypt"] != "0"));
-            }else{
-                pcs->set_access_token(temp["access_token"]);
-                transfer.reset(pcs);
-            }
-            //用于版本信息保存
-            TransferRest* rest(new TransferRest(temp["logon_host"],"/sql/v",headers,"",temp["logon_host"]+"/batch",temp["encrypt"] != "0"));
-            std::shared_ptr<TransferInterface> rest_transfer;
-            if(temp["note_token"].empty()){
-                rest_transfer.reset(new TransferWithLogon(std::shared_ptr<TransferInterface>(rest),
-                temp["logon_host"],
-                cookie,
-                temp["local_history"]+"/.ezsync/bduss/",
-                headers,
-                "",
-                [cookie,rest](const std::string& access_token,const std::string& note_token)mutable{
-                    rest->set_cookie(cookie+
-                        "NOTETOKEN=" + note_token+"; ");
-                },
-                temp["encrypt"] != "0"));
-            }else{
-                rest->set_cookie(cookie+
-                        "NOTETOKEN=" + temp["note_token"]+"; ");
-                rest_transfer.reset(rest);
-            }
-
-            re.reset(new CloudStorage(transfer,temp["remote_storage"]));
-            rvs.reset(new CloudVersionHistory2(rest_transfer,temp["local_history"],temp["remote_storage"]));
-            control->transfers.push_back(rest_transfer);
-            control->transfers.push_back(transfer);
         }else{
             VERIFY_TRUE(false)<< "unknown remote_type " <<temp["remote_type"];
         }
